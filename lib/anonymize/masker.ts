@@ -54,6 +54,7 @@ export function applyMasks(text: string, matches: PiiMatch[]): string {
 export function buildStats(matches: PiiMatch[]): AnonymizeStats {
   const byType: AnonymizeStats["byType"] = {
     ssn: 0,
+    iban: 0,
     email: 0,
     phone: 0,
     dateOfBirth: 0,

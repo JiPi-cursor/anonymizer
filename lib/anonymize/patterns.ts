@@ -1,8 +1,11 @@
+import { NAME_TOKEN } from "./constants";
+import { FRENCH_PII_PATTERNS } from "./french-patterns";
 import type { PatternDefinition, PiiType } from "./types";
 
 /** Replacement tokens shown in the anonymized output. */
 export const MASK_TOKENS: Record<PiiType, string> = {
   ssn: "[SSN_REDACTED]",
+  iban: "[IBAN_REDACTED]",
   email: "[EMAIL_REDACTED]",
   phone: "[PHONE_REDACTED]",
   dateOfBirth: "[DOB_REDACTED]",
@@ -13,6 +16,7 @@ export const MASK_TOKENS: Record<PiiType, string> = {
 /** Higher priority wins when two detections overlap. */
 export const PII_PRIORITY: Record<PiiType, number> = {
   ssn: 100,
+  iban: 98,
   email: 90,
   phone: 80,
   dateOfBirth: 70,
@@ -20,11 +24,8 @@ export const PII_PRIORITY: Record<PiiType, number> = {
   name: 50,
 };
 
-/**
- * Ordered regex patterns for PII detection.
- * Uses the `d` flag so capture-group spans can be resolved precisely.
- */
-export const PII_PATTERNS: PatternDefinition[] = [
+/** English / international patterns. */
+const BASE_PII_PATTERNS: PatternDefinition[] = [
   {
     type: "ssn",
     regex: /\b\d{3}[-\s]\d{2}[-\s]\d{4}\b/gd,
@@ -72,13 +73,28 @@ export const PII_PATTERNS: PatternDefinition[] = [
   {
     type: "name",
     regex:
-      /\b(?:Name|Patient|Client|Contact)\s*:+\s*([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){0,3})\b/gd,
+      new RegExp(
+        `\\b(?:Name|Patient|Client|Contact)\\s*:+\\s*(${NAME_TOKEN}(?:[ \\t]+${NAME_TOKEN}){0,3})\\b`,
+        "gd",
+      ),
     groupIndex: 1,
   },
   {
     type: "name",
     regex:
-      /\b(?:Mr|Mrs|Ms|Dr)\.?\s+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+){0,3})\b/gd,
+      new RegExp(
+        `\\b(?:Mr|Mrs|Ms|Dr)\\.?\\s+(${NAME_TOKEN}(?:[ \\t]+${NAME_TOKEN}){0,3})\\b`,
+        "gd",
+      ),
     groupIndex: 1,
   },
+];
+
+/**
+ * All regex patterns for PII detection (international + French).
+ * Uses the `d` flag so capture-group spans can be resolved precisely.
+ */
+export const PII_PATTERNS: PatternDefinition[] = [
+  ...BASE_PII_PATTERNS,
+  ...FRENCH_PII_PATTERNS,
 ];

@@ -14,25 +14,35 @@ function collectPatternMatches(
     definition.regex.flags,
   );
 
-  let match = regex.exec(text);
-  while (match !== null) {
+  let searchFrom = 0;
+
+  while (searchFrom <= text.length) {
+    regex.lastIndex = searchFrom;
+    const match = regex.exec(text);
+
+    if (match === null) {
+      break;
+    }
+
     const span = resolveSpan(match, definition.groupIndex);
     const matchedText = text.slice(span.start, span.end);
+    const isValid =
+      matchedText.length > 0 &&
+      (definition.validate === undefined || definition.validate(matchedText));
 
-    if (matchedText.length > 0) {
+    if (isValid) {
       matches.push({
         type: definition.type,
         start: span.start,
         end: span.end,
         text: matchedText,
       });
+      searchFrom =
+        match[0].length === 0 ? match.index + 1 : match.index + match[0].length;
+      continue;
     }
 
-    if (match[0].length === 0) {
-      regex.lastIndex += 1;
-    }
-
-    match = regex.exec(text);
+    searchFrom = match.index + 1;
   }
 
   return matches;

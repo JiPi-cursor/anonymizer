@@ -1,6 +1,7 @@
 /** Supported categories of personally identifiable information. */
 export type PiiType =
   | "ssn"
+  | "iban"
   | "email"
   | "phone"
   | "dateOfBirth"
@@ -35,4 +36,6 @@ export interface PatternDefinition {
   regex: RegExp;
   /** Capture group index to mask; defaults to the full match. */
   groupIndex?: number;
+  /** Optional post-match filter to reduce false positives. */
+  validate?: (matchedText: string) => boolean;
 }

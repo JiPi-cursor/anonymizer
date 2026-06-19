@@ -1,0 +1,8 @@
+Dossier Patient
+Nom et prénom : Marie Dupont
+Téléphone : 06 12 34 56 78
+Date de naissance : 15/03/1985
+NIR : 2 85 03 75 123 456 78
+IBAN : FR76 1234 5678 9012 3456 7890 123
+Adresse : 12 rue de la République, 75001 Paris
+Contactez Jean-Pierre Martin pour le suivi.

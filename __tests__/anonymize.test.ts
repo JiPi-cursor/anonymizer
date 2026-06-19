@@ -84,3 +84,96 @@ describe("anonymizeText", () => {
     expect(result.stats.total).toBeGreaterThanOrEqual(6);
   });
 });
+
+const FRENCH_SAMPLE = `Dossier Patient
+Nom et prénom : Marie Dupont
+Téléphone : 06 12 34 56 78
+Date de naissance : 15/03/1985
+NIR : 2 85 03 75 123 456 78
+IBAN : FR76 1234 5678 9012 3456 7890 123
+Adresse : 12 rue de la République, 75001 Paris
+Contactez Jean-Pierre Martin pour le suivi.`;
+
+describe("anonymizeText (French)", () => {
+  it("masks French labeled names", () => {
+    const result = anonymizeText("Nom : Dupont");
+
+    expect(result.anonymized).toBe("Nom : [NAME_REDACTED]");
+  });
+
+  it("masks French first and last names with accents", () => {
+    const result = anonymizeText("Nom et prénom : Zoé Müller");
+
+    expect(result.anonymized).toBe("Nom et prénom : [NAME_REDACTED]");
+    expect(result.anonymized).not.toContain("Zoé");
+  });
+
+  it("masks unlabeled French full names", () => {
+    const result = anonymizeText("Contactez Jean-Pierre Martin pour le suivi.");
+
+    expect(result.anonymized).toContain("[NAME_REDACTED]");
+    expect(result.anonymized).not.toContain("Jean-Pierre");
+    expect(result.anonymized).not.toContain("Martin");
+  });
+
+  it("masks French mobile and landline numbers", () => {
+    const mobile = anonymizeText("Portable : 06.12.34.56.78");
+    const landline = anonymizeText("Fixe : 01 23 45 67 89");
+    const international = anonymizeText("Appeler +33 6 12 34 56 78");
+
+    expect(mobile.anonymized).toContain("[PHONE_REDACTED]");
+    expect(landline.anonymized).toContain("[PHONE_REDACTED]");
+    expect(international.anonymized).toContain("[PHONE_REDACTED]");
+    expect(mobile.anonymized).not.toContain("06.12.34.56.78");
+  });
+
+  it("masks French NIR social security numbers", () => {
+    const spaced = anonymizeText("NIR : 2 85 03 75 123 456 78");
+    const compact = anonymizeText("NIR 285037512345678");
+
+    expect(spaced.anonymized).toContain("[SSN_REDACTED]");
+    expect(compact.anonymized).toContain("[SSN_REDACTED]");
+    expect(spaced.anonymized).not.toContain("285037512345678");
+  });
+
+  it("masks French IBAN numbers", () => {
+    const labeled = anonymizeText("IBAN : FR76 1234 5678 9012 3456 7890 123");
+    const compact = anonymizeText("Virement vers FR7612345678901234567890123");
+
+    expect(labeled.anonymized).toContain("[IBAN_REDACTED]");
+    expect(compact.anonymized).toContain("[IBAN_REDACTED]");
+    expect(labeled.anonymized).not.toContain("FR76");
+  });
+
+  it("masks French dates of birth", () => {
+    const numeric = anonymizeText("Date de naissance : 15/03/1985");
+    const textual = anonymizeText("Né le : 15 mars 1985");
+
+    expect(numeric.anonymized).toBe("Date de naissance : [DOB_REDACTED]");
+    expect(textual.anonymized).toBe("Né le : [DOB_REDACTED]");
+  });
+
+  it("masks French addresses", () => {
+    const street = anonymizeText("Domicile au 12 rue de la République");
+    const postal = anonymizeText("Résidence à 75001 Paris");
+
+    expect(street.anonymized).toContain("[ADDRESS_REDACTED]");
+    expect(street.anonymized).not.toContain("rue de la République");
+    expect(postal.anonymized).toContain("[ADDRESS_REDACTED]");
+    expect(postal.anonymized).not.toContain("75001 Paris");
+  });
+
+  it("preserves French non-PII content in a full document", () => {
+    const result = anonymizeText(FRENCH_SAMPLE);
+
+    expect(result.anonymized).toContain("Dossier Patient");
+    expect(result.anonymized).toContain("Nom et prénom : [NAME_REDACTED]");
+    expect(result.anonymized).toContain("Téléphone : [PHONE_REDACTED]");
+    expect(result.anonymized).toContain("Date de naissance : [DOB_REDACTED]");
+    expect(result.anonymized).toContain("NIR : [SSN_REDACTED]");
+    expect(result.anonymized).toContain("IBAN : [IBAN_REDACTED]");
+    expect(result.anonymized).toContain("Adresse : [ADDRESS_REDACTED]");
+    expect(result.anonymized).toContain("Contactez [NAME_REDACTED] pour le suivi.");
+    expect(result.stats.total).toBeGreaterThanOrEqual(7);
+  });
+});
