@@ -1,7 +1,0 @@
-Patient Record
-Name: John Smith
-Email: john.smith@example.com
-Phone: (555) 123-4567
-DOB: 03/15/1985
-SSN: 123-45-6789
-Address: 742 Evergreen Terrace, Springfield
