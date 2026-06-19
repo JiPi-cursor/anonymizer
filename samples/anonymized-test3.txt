@@ -1,0 +1,24 @@
+DOCUMENT CONFIDENTIEL - TEST ANONYMISATION AVANCÉ
+
+Entreprise : [ORG_001]
+SIRET : [SIRET_001]
+SIREN : [SIREN_001]
+TVA intracommunautaire : [IDENTIFIANT_001]
+
+Nom du dirigeant : [PER_001]
+Date de naissance : [DOB_001]
+Adresse du siège : [ADDR_001]
+Téléphone : [TEL_001]
+Email : [EMAIL_001]
+
+Autre contact : Maître [PER_002], avocate
+Téléphone : [TEL_002]
+Email : [EMAIL_002]
+
+Collaborateur : [PER_003] (né le [DOB_002])
+SIRET de son entreprise : [SIRET_002]
+
+IBAN : [IBAN_001]
+Numéro de carte : [CARD_001]
+
+Ce matin, [PER_001] a signé un contrat avec l'entreprise de [PER_004] (SIRET [SIRET_003]).

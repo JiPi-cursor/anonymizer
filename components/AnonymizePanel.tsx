@@ -8,14 +8,24 @@ import { StatsBar } from "@/components/StatsBar";
 import { TextPreview } from "@/components/TextPreview";
 import { anonymizeText, type AnonymizeResult } from "@/lib/anonymize";
 import {
+  type DocumentArtifact,
+  type DocumentFormat,
+  DocumentProcessingError,
+  extractDocument,
+  formatLabel,
+  MAX_DOCUMENT_SIZE_BYTES,
+  rebuildFromArtifact,
+  SUPPORTED_FILE_ACCEPT,
+  SUPPORTED_FORMATS_HINT,
+} from "@/lib/documents";
+import {
   buildAnonymizedFileName,
   buildMappingFileName,
+  downloadBinaryFile,
   downloadMappingFile,
   downloadTextFile,
 } from "@/lib/download";
 import { createMappingFile } from "@/lib/mapping";
-
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 /**
  * Upload, anonymize, preview, and export text plus mapping files.
@@ -23,65 +33,95 @@ const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 export function AnonymizePanel() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
+  const [documentFormat, setDocumentFormat] = useState<DocumentFormat | null>(
+    null,
+  );
+  const [artifact, setArtifact] = useState<DocumentArtifact | null>(null);
   const [result, setResult] = useState<AnonymizeResult | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleFileSelect = useCallback((file: File) => {
+  const handleFileSelect = useCallback(async (file: File) => {
     setError(null);
     setResult(null);
     setFileName(null);
     setFileSize(null);
-
-    if (!file.name.toLowerCase().endsWith(".txt")) {
-      setError("Only .txt files are supported.");
-      return;
-    }
+    setDocumentFormat(null);
+    setArtifact(null);
+    setWarnings([]);
 
     if (file.size === 0) {
       setError("The selected file is empty.");
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setError("File exceeds the 5 MB limit.");
+    if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+      setError("File exceeds the 10 MB limit.");
       return;
     }
 
     setIsLoading(true);
 
-    const reader = new FileReader();
+    try {
+      const { extracted, artifact: loadedArtifact } = await extractDocument(file);
+      const anonymized = anonymizeText(extracted.text, file.name);
 
-    reader.onload = () => {
-      const text = typeof reader.result === "string" ? reader.result : "";
-
-      if (!text.trim()) {
-        setError("The selected file contains no readable text.");
-        setIsLoading(false);
-        return;
-      }
-
-      setResult(anonymizeText(text, file.name));
+      setResult(anonymized);
+      setArtifact(loadedArtifact);
+      setDocumentFormat(extracted.format);
+      setWarnings(extracted.warnings);
       setFileName(file.name);
       setFileSize(file.size);
+    } catch (caught) {
+      setError(
+        caught instanceof DocumentProcessingError || caught instanceof Error
+          ? caught.message
+          : "Could not process the selected file.",
+      );
+    } finally {
       setIsLoading(false);
-    };
-
-    reader.onerror = () => {
-      setError("Could not read the selected file.");
-      setIsLoading(false);
-    };
-
-    reader.readAsText(file);
+    }
   }, []);
 
-  const handleDownloadText = useCallback(() => {
-    if (!result || !fileName) {
+  const handleDownloadOutput = useCallback(async () => {
+    if (!result || !fileName || !documentFormat) {
       return;
     }
 
-    downloadTextFile(result.anonymized, buildAnonymizedFileName(fileName));
-  }, [fileName, result]);
+    const outputName = buildAnonymizedFileName(fileName);
+
+    if (documentFormat === "txt") {
+      downloadTextFile(result.anonymized, outputName);
+      return;
+    }
+
+    if (!artifact) {
+      setError("Source document data is missing. Please upload the file again.");
+      return;
+    }
+
+    setIsExporting(true);
+    setError(null);
+
+    try {
+      const bytes = await rebuildFromArtifact(
+        artifact,
+        result.mapping,
+        "anonymize",
+      );
+      downloadBinaryFile(bytes, outputName, documentFormat);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Failed to export the anonymized document.",
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  }, [artifact, documentFormat, fileName, result]);
 
   const handleDownloadMapping = useCallback(() => {
     if (!result || !fileName) {
@@ -102,13 +142,24 @@ export function AnonymizePanel() {
     return `${(bytes / 1024).toFixed(1)} KB`;
   };
 
+  const exportLabel =
+    documentFormat === "txt"
+      ? "Download .txt"
+      : `Download .${documentFormat ?? "txt"}`;
+
   return (
     <div className="space-y-4">
-      <FileUpload onFileSelect={handleFileSelect} disabled={isLoading} />
+      <FileUpload
+        onFileSelect={handleFileSelect}
+        disabled={isLoading || isExporting}
+        accept={SUPPORTED_FILE_ACCEPT}
+        label="Drop a document here or click to browse"
+        hint={SUPPORTED_FORMATS_HINT}
+      />
 
       {isLoading && (
         <p className="text-sm font-medium text-indigo-600">
-          Reading and anonymizing file...
+          Extracting text and anonymizing document...
         </p>
       )}
 
@@ -121,11 +172,21 @@ export function AnonymizePanel() {
         </p>
       )}
 
-      {result && fileName && fileSize !== null && (
+      {warnings.length > 0 && result && (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          {warnings.map((warning) => (
+            <p key={warning}>{warning}</p>
+          ))}
+        </div>
+      )}
+
+      {result && fileName && fileSize !== null && documentFormat && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
             <div className="text-sm text-slate-600">
               <span className="font-semibold text-slate-900">{fileName}</span>
+              <span className="mx-2 text-slate-300">·</span>
+              {formatLabel(documentFormat)}
               <span className="mx-2 text-slate-300">·</span>
               {formatFileSize(fileSize)}
               <span className="mx-2 text-slate-300">·</span>
@@ -137,8 +198,9 @@ export function AnonymizePanel() {
             </div>
             <div className="flex flex-wrap gap-2">
               <DownloadButton
-                label="Download .txt"
-                onClick={handleDownloadText}
+                label={exportLabel}
+                onClick={handleDownloadOutput}
+                disabled={isExporting}
               />
               <DownloadButton
                 label="Download mapping .json"
@@ -156,7 +218,11 @@ export function AnonymizePanel() {
           <MappingTable entries={result.mapping} />
 
           <div className="flex flex-wrap justify-end gap-2">
-            <DownloadButton label="Download .txt" onClick={handleDownloadText} />
+            <DownloadButton
+              label={exportLabel}
+              onClick={handleDownloadOutput}
+              disabled={isExporting}
+            />
             <DownloadButton
               label="Download mapping .json"
               variant="secondary"

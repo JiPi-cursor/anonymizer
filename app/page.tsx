@@ -17,9 +17,9 @@ export default function Home() {
               Document Anonymizer
             </h1>
             <p className="max-w-2xl text-sm text-slate-600">
-              Detect and replace personal data with numbered tags, export a
-              reversible mapping file, and restore values later. All processing
-              runs locally in your browser.
+              Detect and replace personal data with numbered tags in TXT, PDF,
+              and DOCX files. Export a reversible JSON mapping and restore
+              values later. All processing runs locally in your browser.
             </p>
           </div>
           <ModeTabs mode={mode} onChange={setMode} />

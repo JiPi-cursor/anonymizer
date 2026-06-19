@@ -57,7 +57,24 @@ function resolveSpan(
 ): { start: number; end: number } {
   if (groupIndex !== undefined && match.indices?.[groupIndex]) {
     const [start, end] = match.indices[groupIndex];
-    return { start, end };
+    if (start !== undefined && end !== undefined) {
+      return { start, end };
+    }
+  }
+
+  if (
+    groupIndex !== undefined &&
+    match[groupIndex] !== undefined &&
+    match.index !== undefined
+  ) {
+    const groupText = match[groupIndex];
+    const offset = match[0].indexOf(groupText);
+    if (offset >= 0) {
+      return {
+        start: match.index + offset,
+        end: match.index + offset + groupText.length,
+      };
+    }
   }
 
   if (match.indices?.[0]) {

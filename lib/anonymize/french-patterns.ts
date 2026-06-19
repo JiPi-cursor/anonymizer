@@ -1,38 +1,112 @@
 import {
   FRENCH_LABEL_SEP,
   FRENCH_MONTHS,
+  FRENCH_NAME_SEQUENCE,
   FRENCH_STREET_PARTICLE,
   FRENCH_STREET_TYPES,
+  FRENCH_TITLES,
   isLikelyFrenchFullName,
   NAME_TOKEN,
 } from "./constants";
 import type { PatternDefinition } from "./types";
+import {
+  isPlausibleSirenDigits,
+  isPlausibleSiretDigits,
+} from "./validators";
 
 const LABEL = FRENCH_LABEL_SEP;
+const UNICODE_FLAGS = "gdu";
 
 /** Street name body: words after the street type, optional postal code + city. */
 const STREET_BODY =
-  `[A-Za-zÀ-öø-ÿ][A-Za-zÀ-öø-ÿ0-9\\-]*(?:[ \\t]+[A-Za-zÀ-öø-ÿ0-9\\-]+){0,8}`;
+  "[\\p{L}][\\p{L}0-9\\-]*(?:[ \\t]+[\\p{L}0-9\\-]+){0,8}";
 const POSTAL_CITY =
-  `(?:,[ \\t]+\\d{5}[ \\t]+[A-Za-zÀ-öø-ÿ][A-Za-zÀ-öø-ÿ\\-]+(?:[ \\t]+[A-Za-zÀ-öø-ÿ\\-]+){0,2})?`;
+  "(?:,[ \\t]+\\d{5}[ \\t]+[\\p{Lu}\\p{Ll}\\-]+(?:[ \\t]+[\\p{L}\\-]+){0,2})?";
+const STREET_NUMBER = "\\d{1,4}\\s*(?:bis|ter)?";
 
 /**
  * Rule-based regex patterns tuned for French documents.
  * Ordered within each section: labeled → specific → general.
  */
+const ORG_BODY = "[\\p{Lu}][\\p{L}0-9'’\\-&]+(?:[ \\t]+[\\p{L}0-9'’\\-&]+){0,6}";
+const LOCATION_BODY =
+  "[\\p{Lu}][\\p{L}\\-]+(?:[ \\t]+[\\p{L}\\-]+){0,4}";
+const IDENTIFIER_BODY = "[A-Z0-9][A-Z0-9\\-_/]{2,}";
+const SIRET_BODY = "\\d{3}\\s?\\d{3}\\s?\\d{3}\\s?\\d{5}";
+const SIREN_BODY = "\\d{3}\\s?\\d{3}\\s?\\d{3}";
+
 export const FRENCH_PII_PATTERNS: PatternDefinition[] = [
+  // --- SIRET / SIREN (aligned with Python direct-regex pass) ---
+  {
+    type: "siret",
+    regex: new RegExp(
+      `\\b(?i:SIRET|RCS|n°\\s*RCS|immatriculation)(?:\\s+[^:]+)?${LABEL}(${SIRET_BODY}|\\d{14})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "siret",
+    regex: new RegExp(
+      `\\b(?i:SIRET)\\s+(${SIRET_BODY}|\\d{14})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "siret",
+    regex: new RegExp(`\\(SIRET\\s+(${SIRET_BODY})\\)`, UNICODE_FLAGS),
+    groupIndex: 1,
+  },
+  {
+    type: "siren",
+    regex: new RegExp(
+      `\\b(?i:SIREN)(?:\\s+[^:]+)?${LABEL}(${SIREN_BODY}|\\d{9})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "siren",
+    regex: new RegExp(
+      `\\b(?i:SIREN)\\s+(${SIREN_BODY}|\\d{9})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "siret",
+    regex: /\b\d{3}\s\d{3}\s\d{3}\s\d{5}\b/gd,
+    validate: isPlausibleSiretDigits,
+  },
+  {
+    type: "siret",
+    regex: /\b\d{14}\b/gd,
+    validate: isPlausibleSiretDigits,
+  },
+  {
+    type: "siren",
+    regex: /\b\d{3}\s\d{3}\s\d{3}\b/gd,
+    validate: isPlausibleSirenDigits,
+  },
+  {
+    type: "siren",
+    regex: /\b(?<![A-Z]{2}\d{2}\s)\d{9}\b/gd,
+    validate: isPlausibleSirenDigits,
+  },
+
   // --- Social security (NIR) ---
   {
     type: "ssn",
     regex: new RegExp(
-      `\\b(?:NIR|Numéro\\s+de\\s+sécurité\\s+sociale|Numero\\s+de\\s+securite\\s+sociale|n°\\s*(?:de\\s+)?sécurité\\s+sociale|n°\\s*SS|n°\\s*sécu)${LABEL}([12][\\s.]?\\d{2}(?:[\\s.]?\\d{2}){2}[\\s.]?\\d{3}[\\s.]?\\d{3}[\\s.]?\\d{2})\\b`,
-      "gid",
+      `\\b(?i:NIR|Numéro\\s+de\\s+sécurité\\s+sociale|Numero\\s+de\\s+securite\\s+sociale|n°\\s*(?:de\\s+)?sécurité\\s+sociale|n°\\s*SS|n°\\s*sécu)${LABEL}([12][\\s.]?\\d{2}(?:[\\s.]?\\d{2}){2}[\\s.]?\\d{3}[\\s.]?\\d{3}[\\s.]?\\d{2,3})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
   {
     type: "ssn",
-    regex: /\b[12][\s.]?\d{2}(?:[\s.]?\d{2}){2}[\s.]?\d{3}[\s.]?\d{3}[\s.]?\d{2}\b/gd,
+    regex: /\b[12][\s.]?\d{2}(?:[\s.]?\d{2}){2}[\s.]?\d{3}[\s.]?\d{3}[\s.]?\d{2,3}\b/gd,
   },
   {
     type: "ssn",
@@ -43,8 +117,8 @@ export const FRENCH_PII_PATTERNS: PatternDefinition[] = [
   {
     type: "iban",
     regex: new RegExp(
-      `\\b(?:IBAN|RIB)${LABEL}((?:FR\\d{2}(?:\\s?\\d{4}){5}\\s?\\d{3}|[A-Z]{2}\\d{2}(?:\\s?[A-Z0-9]{4}){2,7}\\s?[A-Z0-9]{1,4}))\\b`,
-      "gid",
+      `\\b(?i:IBAN|RIB)${LABEL}((?:FR\\d{2}(?:\\s?\\d{4}){5}\\s?\\d{3}|[A-Z]{2}\\d{2}(?:\\s?[A-Z0-9]{4}){2,7}\\s?[A-Z0-9]{1,4}))\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
@@ -65,8 +139,8 @@ export const FRENCH_PII_PATTERNS: PatternDefinition[] = [
   {
     type: "creditCard",
     regex: new RegExp(
-      `\\b(?:Carte\\s+bancaire|N°\\s*de\\s*carte|Numéro\\s+de\\s+carte|Numero\\s+de\\s+carte|CB)${LABEL}((?:\\d{4}[ \\t]){3}\\d{4})\\b`,
-      "gid",
+      `\\b(?i:Carte\\s+bancaire|Carte\\s+bleue|N°\\s*de\\s*carte|Numéro\\s+de\\s+carte|Numero\\s+de\\s+carte|CB)${LABEL}((?:\\d{4}[ \\t]){3}\\d{4})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
@@ -79,8 +153,8 @@ export const FRENCH_PII_PATTERNS: PatternDefinition[] = [
   {
     type: "phone",
     regex: new RegExp(
-      `\\b(?:Tél(?:éphone)?|Tél\\.|Telephone|GSM|Mobile|Portable|Fax)${LABEL}((?:\\+33|0)[\\s.\\-]?[1-9](?:[\\s.\\-]?\\d{2}){4})\\b`,
-      "gid",
+      `\\b(?i:Tél(?:éphone)?|Tél\\.|Telephone|GSM|Mobile|Portable|Fixe|Fax)(?:\\s+[^:]+)?${LABEL}((?:\\+33|0)[\\s.\\-]?[1-9](?:[\\s.\\-]?\\d{2}){4})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
@@ -97,81 +171,180 @@ export const FRENCH_PII_PATTERNS: PatternDefinition[] = [
   {
     type: "dateOfBirth",
     regex: new RegExp(
-      `\\b(?:Date\\s+de\\s+naissance|DDN|N[ée]e?\\s+le|Naissance)${LABEL}(\\d{1,2}[\\/\\-\\.]\\d{1,2}[\\/\\-\\.]\\d{2,4})\\b`,
-      "gid",
+      `\\b(?i:Date\\s+de\\s+naissance|DDN|N[ée]e?\\s+le|Naissance)${LABEL}(\\d{1,2}[\\/\\-\\.]\\d{1,2}[\\/\\-\\.]\\d{2,4})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
   {
     type: "dateOfBirth",
     regex: new RegExp(
-      `\\b(?:Date\\s+de\\s+naissance|N[ée]e?\\s+le)${LABEL}(\\d{1,2}\\s+(?:${FRENCH_MONTHS})\\s+\\d{4})\\b`,
-      "gid",
+      `\\b(?i:Date\\s+de\\s+naissance|N[ée]e?\\s+le)${LABEL}(\\d{1,2}\\s+(?:${FRENCH_MONTHS})\\s+\\d{4})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
+  },
+  {
+    type: "dateOfBirth",
+    regex: /\(né\s+le\s+(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\)/gdu,
+    groupIndex: 1,
+  },
+
+  // --- Postal code (Python: CODE_POSTAL) ---
+  {
+    type: "postalCode",
+    regex: new RegExp(
+      `\\b(?i:Code\\s+postal|CP|Cedex)${LABEL}(\\d{5})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+
+
+  // --- Organization (Python: ORG) ---
+  {
+    type: "organization",
+    regex: new RegExp(
+      `\\b(?i:Organisation|Organization|Société|Societe|Entreprise|Groupe|Cabinet|Raison\\s+sociale)${LABEL}(${ORG_BODY})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "organization",
+    regex: new RegExp(
+      `\\b(?:SARL|SA|SAS|SASU|EURL|SCI|SNC|GIE)\\s+(${ORG_BODY})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+
+  // --- Location (Python: LOC / GPE → LIEU) ---
+  {
+    type: "location",
+    regex: new RegExp(
+      `\\b(?i:Ville|Lieu|Localité|Localite|Région|Region|Commune)${LABEL}(${LOCATION_BODY})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+
+  // --- Generic identifier (Python: NRP → IDENTIFIANT) ---
+  {
+    type: "identifier",
+    regex: new RegExp(
+      `\\b(?i:TVA)(?:\\s+intracommunautaire)?${LABEL}([A-Z]{2}\\s?\\d{2}\\s?\\d{9,12})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "identifier",
+    regex: new RegExp(
+      `\\b(?i:Référence|Reference|Réf|Ref|Identifiant|ID|N°|Numéro|Numero|Dossier|Contrat|Facture)${LABEL}(${IDENTIFIER_BODY})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+
+  // --- General dates (Python: DATE_TIME → DATE) ---
+  {
+    type: "date",
+    regex: new RegExp(
+      `\\b\\d{1,2}\\s+(?:${FRENCH_MONTHS})\\s+\\d{4}\\b`,
+      UNICODE_FLAGS,
+    ),
+  },
+  {
+    type: "date",
+    regex: /\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b/gd,
   },
 
   // --- Address (labeled first, then full street+postal, then fragments) ---
   {
     type: "address",
     regex: new RegExp(
-      `\\b(?:Adresse|Adr\\.?)${LABEL}([^\\n\\r]+)`,
-      "gid",
+      `\\b(?i:Adresse|Adr\\.?)${LABEL}([^\\n\\r]+)`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
   {
     type: "address",
     regex: new RegExp(
-      `\\b\\d{1,4}[ \\t]+(?i:${FRENCH_STREET_TYPES})\\s+${FRENCH_STREET_PARTICLE}?${STREET_BODY}${POSTAL_CITY}`,
-      "gid",
+      `\\b${STREET_NUMBER}[ \\t]+(?i:${FRENCH_STREET_TYPES})\\s+${FRENCH_STREET_PARTICLE}?${STREET_BODY}${POSTAL_CITY}`,
+      UNICODE_FLAGS,
     ),
   },
   {
     type: "address",
     regex: new RegExp(
-      `\\b\\d{1,4}[ \\t]+(?i:${FRENCH_STREET_TYPES})\\s+${FRENCH_STREET_PARTICLE}?${STREET_BODY}`,
-      "gid",
+      `\\b${STREET_NUMBER}[ \\t]+(?i:${FRENCH_STREET_TYPES})\\s+${FRENCH_STREET_PARTICLE}?${STREET_BODY}`,
+      UNICODE_FLAGS,
     ),
   },
   {
     type: "address",
     regex:
-      /\b\d{5}[ \t]+[A-ZÀ-ÖØ-Þ][A-Za-zÀ-öø-ÿ\-]+(?:[ \t]+[A-Za-zÀ-öø-ÿ\-]+){0,3}\b/gd,
+      /\b\d{5}[ \t]+[\p{Lu}\p{Ll}\-]+(?:[ \t]+[\p{L}\-]+){0,3}\b/gdu,
   },
 
   // --- Email (French labels) ---
   {
     type: "email",
     regex: new RegExp(
-      `\\b(?:E-?mail|Courriel|Mél|Mel)${LABEL}([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})\\b`,
-      "gid",
+      `\\b(?i:E-?mail|Courriel|Mél|Mel)(?:\\s+[^:]+)?${LABEL}([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
 
-  // --- Names (labeled, titles, relatives, chez, unlabeled) ---
+  // --- Names (labeled, titles, list items, relatives, chez, unlabeled) ---
   {
     type: "name",
     regex: new RegExp(
-      `\\b(?:Nom(?:\\s+et\\s+prénom)?|Prénom|Prenom|Identité|Identite)${LABEL}(${NAME_TOKEN}(?:[ \\t]+(?:de\\s+|du\\s+|le\\s+)?${NAME_TOKEN}){0,3})\\b`,
-      "gid",
+      `\\b(?i:Nom(?:\\s+(?:complet|du\\s+dirigeant))?(?:\\s+et\\s+prénom)?|Prénom|Prenom|Identité|Identite)${LABEL}(${FRENCH_NAME_SEQUENCE})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
   {
     type: "name",
     regex: new RegExp(
-      `\\b(?:M\\.|Mme|Mlle|Monsieur|Madame|Mademoiselle)\\s+(${NAME_TOKEN}(?:[ \\t]+${NAME_TOKEN}){0,3})\\b`,
-      "gid",
+      `\\b(?i:Autre\\s+contact|Collaborateur|Dirigeant|Client)${LABEL}(?:(?:${FRENCH_TITLES})\\s+)?(${FRENCH_NAME_SEQUENCE})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
   {
     type: "name",
     regex: new RegExp(
-      `\\b(?:sa |son |leur )?(?:sœur|soeur|frère|frere|mère|mere|père|pere|épouse|epouse|fille|fils|mari|femme|ami|amie)\\s+(${NAME_TOKEN}[ \\t]+${NAME_TOKEN})\\b`,
-      "gid",
+      `\\b(?:${FRENCH_TITLES})\\s+(${FRENCH_NAME_SEQUENCE})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "name",
+    regex: new RegExp(
+      `(?:^|[\\n\\r])[-•]\\s*(${FRENCH_NAME_SEQUENCE})${LABEL}`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "name",
+    regex: new RegExp(
+      `\\b(?:sa |son |leur )?(?:sœur|soeur|frère|frere|mère|mere|père|pere|épouse|epouse|fille|fils|mari|femme|ami|amie|collègue|collegue|avocat)\\s+(?:(?:${FRENCH_TITLES})\\s+)?(${FRENCH_NAME_SEQUENCE})\\b`,
+      UNICODE_FLAGS,
+    ),
+    groupIndex: 1,
+  },
+  {
+    type: "name",
+    regex: new RegExp(
+      `(?:\\b|(?<=[ \\t]))(?:L[''])?(?:entreprise|société|societe|cabinet|office)\\s+de\\s+(${FRENCH_NAME_SEQUENCE})\\b`,
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
@@ -179,15 +352,15 @@ export const FRENCH_PII_PATTERNS: PatternDefinition[] = [
     type: "name",
     regex: new RegExp(
       `\\bchez\\s+(${NAME_TOKEN}[ \\t]+${NAME_TOKEN})\\b`,
-      "gid",
+      UNICODE_FLAGS,
     ),
     groupIndex: 1,
   },
   {
     type: "name",
     regex: new RegExp(
-      `\\b((${NAME_TOKEN})(?:[ \\t]+${NAME_TOKEN}){1,2})\\b`,
-      "gd",
+      `\\b(${FRENCH_NAME_SEQUENCE})\\b`,
+      UNICODE_FLAGS,
     ),
     validate: isLikelyFrenchFullName,
   },

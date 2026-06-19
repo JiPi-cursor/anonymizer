@@ -1,21 +1,42 @@
-import { NAME_TOKEN } from "./constants";
+import { FRENCH_NAME_SEQUENCE, FRENCH_TITLES } from "./constants";
 import { FRENCH_PII_PATTERNS } from "./french-patterns";
 import type { PatternDefinition, PiiType } from "./types";
 
 /** Higher priority wins when two detections overlap. */
 export const PII_PRIORITY: Record<PiiType, number> = {
   ssn: 100,
-  iban: 98,
-  creditCard: 96,
+  iban: 99,
+  identifier: 98,
+  siret: 97,
+  siren: 96,
+  creditCard: 95,
   email: 90,
   phone: 80,
+  url: 75,
   dateOfBirth: 70,
+  date: 68,
+  postalCode: 62,
   address: 60,
+  organization: 55,
+  location: 54,
   name: 50,
 };
 
 /** English / international patterns. */
 const BASE_PII_PATTERNS: PatternDefinition[] = [
+  {
+    type: "url",
+    regex: /\bhttps?:\/\/[^\s<>"']+/gd,
+  },
+  {
+    type: "url",
+    regex: /\bwww\.[A-Za-z0-9][-A-Za-z0-9]*(?:\.[A-Za-z0-9][-A-Za-z0-9]*)+\/[^\s<>"']*/gd,
+  },
+  {
+    type: "date",
+    regex:
+      /\b(?:\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4})\b/gd,
+  },
   {
     type: "ssn",
     regex: /\b\d{3}[-\s]\d{2}[-\s]\d{4}\b/gd,
@@ -64,8 +85,8 @@ const BASE_PII_PATTERNS: PatternDefinition[] = [
     type: "name",
     regex:
       new RegExp(
-        `\\b(?:Name|Patient|Client|Contact)\\s*:+\\s*(${NAME_TOKEN}(?:[ \\t]+${NAME_TOKEN}){0,3})\\b`,
-        "gd",
+        `\\b(?:Name|Patient|Client)\\s*:+\\s*(?:(?:${FRENCH_TITLES})\\s+)?(${FRENCH_NAME_SEQUENCE})\\b`,
+        "gidu",
       ),
     groupIndex: 1,
   },
@@ -73,8 +94,8 @@ const BASE_PII_PATTERNS: PatternDefinition[] = [
     type: "name",
     regex:
       new RegExp(
-        `\\b(?:Mr|Mrs|Ms|Dr)\\.?\\s+(${NAME_TOKEN}(?:[ \\t]+${NAME_TOKEN}){0,3})\\b`,
-        "gd",
+        `\\b(?:Mr|Mrs|Ms|Dr)\\.?\\s+(${FRENCH_NAME_SEQUENCE})\\b`,
+        "gidu",
       ),
     groupIndex: 1,
   },

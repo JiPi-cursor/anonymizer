@@ -1,0 +1,24 @@
+DOCUMENT CONFIDENTIEL - TEST ANONYMISATION AVANCÉ
+
+Entreprise : SARL Dupont Construction
+SIRET : 123 456 789 00012
+SIREN : 123456789
+TVA intracommunautaire : FR12 123456789
+
+Nom du dirigeant : Jean-Pierre Dubois
+Date de naissance : 12/03/1978
+Adresse du siège : 25 bis Avenue des Champs-Élysées, 75008 Paris
+Téléphone : 06 45 78 92 13
+Email : contact@dupont-construction.fr
+
+Autre contact : Maître Sophie Laurent, avocate
+Téléphone : 01 47 58 96 32
+Email : sophie.laurent@avocat.fr
+
+Collaborateur : Marc Lefèvre (né le 05/11/1985)
+SIRET de son entreprise : 987 654 321 00098
+
+IBAN : FR14 3000 6000 1234 5678 9012 345
+Numéro de carte : 4532 7812 4567 8901
+
+Ce matin, Jean-Pierre Dubois a signé un contrat avec l'entreprise de Marie-Claire Moreau (SIRET 456 789 123 00045).

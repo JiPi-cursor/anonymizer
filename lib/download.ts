@@ -1,3 +1,5 @@
+import type { DocumentFormat } from "@/lib/documents";
+import { detectFormat, extensionFor, mimeTypeFor } from "@/lib/documents";
 import type { MappingFile } from "@/lib/mapping";
 import { serializeMappingFile } from "@/lib/mapping";
 
@@ -9,6 +11,18 @@ export function downloadTextFile(content: string, fileName: string): void {
     new Blob([content], { type: "text/plain;charset=utf-8" }),
     fileName,
   );
+}
+
+/**
+ * Trigger a browser download for a binary document.
+ */
+export function downloadBinaryFile(
+  bytes: Uint8Array,
+  fileName: string,
+  format: DocumentFormat,
+): void {
+  const copy = new Uint8Array(bytes);
+  downloadBlob(new Blob([copy], { type: mimeTypeFor(format) }), fileName);
 }
 
 /**
@@ -37,20 +51,23 @@ function downloadBlob(blob: Blob, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
+function stripExtension(fileName: string): string {
+  return fileName.replace(/\.(txt|pdf|docx)$/i, "");
+}
+
 /** Build a download filename from the original upload name. */
 export function buildAnonymizedFileName(originalName: string): string {
-  const baseName = originalName.replace(/\.txt$/i, "");
-  return `anonymized-${baseName}.txt`;
+  const format = detectFormat(originalName) ?? "txt";
+  return `anonymized-${stripExtension(originalName)}${extensionFor(format)}`;
 }
 
 /** Build a mapping filename from the original upload name. */
 export function buildMappingFileName(originalName: string): string {
-  const baseName = originalName.replace(/\.txt$/i, "");
-  return `mapping-${baseName}.json`;
+  return `mapping-${stripExtension(originalName)}.json`;
 }
 
 /** Build a restored filename from the processed upload name. */
 export function buildRestoredFileName(originalName: string): string {
-  const baseName = originalName.replace(/\.txt$/i, "");
-  return `restored-${baseName}.txt`;
+  const format = detectFormat(originalName) ?? "txt";
+  return `restored-${stripExtension(originalName)}${extensionFor(format)}`;
 }

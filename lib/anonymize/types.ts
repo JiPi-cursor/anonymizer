@@ -1,15 +1,26 @@
 import type { MappingEntry } from "@/lib/mapping";
 
-/** Supported categories of personally identifiable information. */
+/**
+ * Supported PII categories.
+ * Aligned with the Python Presidio perimeter in `others/Anonymizer_v2_1.py`.
+ */
 export type PiiType =
-  | "ssn"
-  | "iban"
-  | "creditCard"
+  | "name"
+  | "organization"
+  | "location"
   | "email"
   | "phone"
+  | "postalCode"
+  | "siret"
+  | "siren"
+  | "iban"
+  | "url"
+  | "date"
   | "dateOfBirth"
-  | "address"
-  | "name";
+  | "identifier"
+  | "ssn"
+  | "creditCard"
+  | "address";
 
 /** A detected PII span within the source text. */
 export interface PiiMatch {

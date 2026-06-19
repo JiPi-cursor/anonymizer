@@ -1,8 +1,5 @@
-/** Uppercase letter including Latin accented characters used in French names. */
-export const NAME_CHAR = "A-Za-zÀ-ÖØ-öø-ÿ";
-
-/** Single capitalized name token, including hyphenated forms (Jean-Pierre). */
-export const NAME_TOKEN = `[A-ZÀ-ÖØ-Þ][${NAME_CHAR}]+(?:-[A-ZÀ-ÖØ-Þ][${NAME_CHAR}]+)?`;
+/** Unicode-aware name token (requires `u` regex flag). */
+export const NAME_TOKEN = "[\\p{Lu}][\\p{L}'’]+(?:-[\\p{Lu}][\\p{L}'’]+)?";
 
 /** Flexible label separator used in French forms, e.g. "Nom :". */
 export const FRENCH_LABEL_SEP = "\\s*:\\s*";
@@ -18,6 +15,10 @@ export const FRENCH_STREET_TYPES =
 /** Optional French street particle between type and name. */
 export const FRENCH_STREET_PARTICLE =
   "(?:de\\s+la\\s+|de\\s+l['']|du\\s+|des\\s+(?:d['']|l[''])?|d['']?)";
+
+/** French honorifics and professional titles. */
+export const FRENCH_TITLES =
+  "Maître|Maitre|Me\\.?|Monsieur|Madame|Mademoiselle|M\\.|Mme|Mlle|Professeur|Prof\\.?|Docteur|Dr\\.?";
 
 /** First token blocklist for unlabeled full-name heuristics (verbs, determiners, etc.). */
 export const FRENCH_NAME_FIRST_WORD_BLOCKLIST = new Set([
@@ -81,7 +82,9 @@ export const FRENCH_NAME_FIRST_WORD_BLOCKLIST = new Set([
   "selon",
   "contre",
   "vers",
-  "chez",
+  "l",
+  "d",
+  "n",
 ]);
 
 /**
@@ -141,6 +144,8 @@ export const FRENCH_NAME_BLOCKLIST = new Set([
   "docteur",
   "médecin",
   "medecin",
+  "maître",
+  "maitre",
   "patient",
   "dossier",
   "document",
@@ -156,6 +161,17 @@ export const FRENCH_NAME_BLOCKLIST = new Set([
   "adresse",
   "numéro",
   "numero",
+  "sécurité",
+  "securite",
+  "sociale",
+  "anonymisation",
+  "confidentiel",
+  "document",
+  "entreprise",
+  "contact",
+  "autres",
+  "contacts",
+  "test",
 ]);
 
 /** Prepositions and conjunctions that terminate a name span in running text. */
@@ -192,19 +208,35 @@ export const FRENCH_NAME_STOPWORDS = new Set([
   "apres",
 ]);
 
+/** Up to three name tokens, allowing particles de/du/le. */
+export const FRENCH_NAME_SEQUENCE = `${NAME_TOKEN}(?:[ \\t]+(?:(?:de|du|le)\\s+)?${NAME_TOKEN}){0,2}`;
+
+/** Normalize a token for blocklist checks (strip leading French elisions). */
+function normalizeNameToken(token: string): string {
+  return token
+    .toLowerCase()
+    .replace(/^l['']/, "")
+    .replace(/^d['']/, "");
+}
+
 /**
  * Returns true when a candidate full-name span looks like a French person name.
  */
 export function isLikelyFrenchFullName(matchedText: string): boolean {
   const words = matchedText
     .split(/[ \t]+/)
-    .map((word) => word.toLowerCase());
+    .map((word) => normalizeNameToken(word))
+    .filter((word) => !["de", "du", "le", "la"].includes(word));
 
   if (words.length < 2 || words.length > 3) {
     return false;
   }
 
   if (FRENCH_NAME_FIRST_WORD_BLOCKLIST.has(words[0])) {
+    return false;
+  }
+
+  if (words.every((word) => word === word.toUpperCase() && word.length > 2)) {
     return false;
   }
 

@@ -1,7 +1,7 @@
-import type { MappingEntry } from "@/lib/mapping";
+import { cleanMappingEntries, type MappingEntry } from "@/lib/mapping";
 import { PII_PRIORITY } from "./patterns";
-import { TagRegistry } from "./tags";
-import type { AnonymizeStats, PiiMatch } from "./types";
+import { TAG_PREFIXES, TagRegistry } from "./tags";
+import type { AnonymizeStats, PiiMatch, PiiType } from "./types";
 
 /**
  * Select non-overlapping matches, preferring higher-priority and longer spans.
@@ -62,9 +62,7 @@ export function applyTaggedMasks(
     }
   }
 
-  const mapping = [...mappingByTag.values()].sort((a, b) =>
-    a.tag.localeCompare(b.tag),
-  );
+  const mapping = cleanMappingEntries([...mappingByTag.values()]);
 
   const ordered = [...taggedMatches].sort((a, b) => b.start - a.start);
   let result = text;
@@ -83,16 +81,9 @@ export function applyTaggedMasks(
 
 /** Build redaction statistics from the final match list. */
 export function buildStats(matches: PiiMatch[]): AnonymizeStats {
-  const byType: AnonymizeStats["byType"] = {
-    ssn: 0,
-    iban: 0,
-    creditCard: 0,
-    email: 0,
-    phone: 0,
-    dateOfBirth: 0,
-    address: 0,
-    name: 0,
-  };
+  const byType = Object.fromEntries(
+    (Object.keys(TAG_PREFIXES) as PiiType[]).map((type) => [type, 0]),
+  ) as AnonymizeStats["byType"];
 
   for (const match of matches) {
     byType[match.type] += 1;

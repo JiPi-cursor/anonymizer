@@ -1,0 +1,21 @@
+DOCUMENT CONFIDENTIEL - ANONYMISATION TEST
+
+Nom complet : [PER_001]
+Date de naissance : [DOB_001]
+Adresse : [ADDR_001]
+Téléphone portable : [TEL_001]
+Téléphone fixe : [TEL_002]
+Email personnel : [EMAIL_001]
+Email pro : [EMAIL_002]
+Numéro de Sécurité Sociale : [SSN_001]
+IBAN : [IBAN_001]
+Numéro de carte bleue : [CARD_001]
+
+Ce matin, [PER_001] a contacté son avocat Maître [PER_002] au [TEL_003]. 
+Son collègue [PER_003] (né le [DOB_002]) habite au [ADDR_002].
+L'entreprise de [PER_004], située au [ADDR_003], a pour contact principal le [TEL_004] et l'email [EMAIL_003].
+
+Autres contacts :
+- [PER_005] : [TEL_005]
+- [PER_006] : [EMAIL_004]
+- [PER_007] : [TEL_006]

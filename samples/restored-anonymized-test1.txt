@@ -1,0 +1,12 @@
+Nom : Jean Dupont
+Adresse : 42 Rue des Lilas, 75020 Paris
+Email : jean.dupont@email.com
+Téléphone : 06 12 34 56 78
+Numéro de sécurité sociale : 1 85 12 34 567 890 12
+Date de naissance : 15/05/1985
+IBAN : FR76 1234 5678 9012 3456 7890 123
+Carte bancaire : 4974 1234 5678 9012
+
+Ce matin, Jean Dupont a appelé son médecin au 01 45 67 89 10 pour prendre rendez-vous. 
+Son adresse email professionnelle est jean.dupont@entreprise.fr.
+Il habite aussi parfois chez sa sœur Marie Martin au 15 Avenue Victor Hugo, 69002 Lyon.

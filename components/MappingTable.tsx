@@ -6,13 +6,21 @@ interface MappingTableProps {
 
 const TYPE_LABELS: Record<MappingEntry["type"], string> = {
   name: "Person",
+  organization: "Organization",
+  location: "Location",
   phone: "Phone",
   email: "Email",
-  address: "Address",
-  ssn: "SSN",
+  postalCode: "Postal code",
+  siret: "SIRET",
+  siren: "SIREN",
   iban: "IBAN",
-  creditCard: "Card",
+  url: "URL",
+  date: "Date",
   dateOfBirth: "DOB",
+  identifier: "Identifier",
+  ssn: "SSN",
+  creditCard: "Card",
+  address: "Address",
 };
 
 /**

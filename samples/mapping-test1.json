@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "createdAt": "2026-06-19T09:25:30.491Z",
+  "sourceFile": "test1.txt",
+  "entries": [
+    {
+      "tag": "[PER_001]",
+      "type": "name",
+      "original": "Jean Dupont"
+    },
+    {
+      "tag": "[PER_002]",
+      "type": "name",
+      "original": "Marie Martin"
+    },
+    {
+      "tag": "[TEL_001]",
+      "type": "phone",
+      "original": "06 12 34 56 78"
+    },
+    {
+      "tag": "[TEL_002]",
+      "type": "phone",
+      "original": "01 45 67 89 10"
+    },
+    {
+      "tag": "[EMAIL_001]",
+      "type": "email",
+      "original": "jean.dupont@email.com"
+    },
+    {
+      "tag": "[EMAIL_002]",
+      "type": "email",
+      "original": "jean.dupont@entreprise.fr"
+    },
+    {
+      "tag": "[ADDR_001]",
+      "type": "address",
+      "original": "42 Rue des Lilas, 75020 Paris"
+    },
+    {
+      "tag": "[ADDR_002]",
+      "type": "address",
+      "original": "15 Avenue Victor Hugo, 69002 Lyon"
+    },
+    {
+      "tag": "[SSN_001]",
+      "type": "ssn",
+      "original": "1 85 12 34 567 890 12"
+    },
+    {
+      "tag": "[IBAN_001]",
+      "type": "iban",
+      "original": "FR76 1234 5678 9012 3456 7890 123"
+    },
+    {
+      "tag": "[CARD_001]",
+      "type": "creditCard",
+      "original": "4974 1234 5678 9012"
+    },
+    {
+      "tag": "[DOB_001]",
+      "type": "dateOfBirth",
+      "original": "15/05/1985"
+    }
+  ]
+}

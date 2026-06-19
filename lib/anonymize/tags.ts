@@ -1,15 +1,23 @@
 import type { PiiType } from "./types";
 
-/** Short prefix used in anonymization tags per PII category. */
+/** Clear, typed tag prefixes — one category per PII kind. */
 export const TAG_PREFIXES: Record<PiiType, string> = {
   name: "PER",
-  phone: "TEL",
+  organization: "ORG",
+  location: "LIEU",
   email: "EMAIL",
-  address: "ADDR",
-  ssn: "SSN",
+  phone: "TEL",
+  postalCode: "CODE_POSTAL",
+  siret: "SIRET",
+  siren: "SIREN",
   iban: "IBAN",
-  creditCard: "CARD",
+  url: "URL",
+  date: "DATE",
   dateOfBirth: "DOB",
+  identifier: "IDENTIFIANT",
+  ssn: "SSN",
+  creditCard: "CARD",
+  address: "ADDR",
 };
 
 /**

@@ -5,14 +5,22 @@ interface StatsBarProps {
 }
 
 const TYPE_LABELS: Record<PiiType, string> = {
-  ssn: "SSNs",
-  iban: "IBANs",
-  creditCard: "card numbers",
+  name: "names",
+  organization: "organizations",
+  location: "locations",
   email: "emails",
   phone: "phones",
+  postalCode: "postal codes",
+  siret: "SIRET numbers",
+  siren: "SIREN numbers",
+  iban: "IBANs",
+  url: "URLs",
+  date: "dates",
   dateOfBirth: "dates of birth",
+  identifier: "identifiers",
+  ssn: "SSNs",
+  creditCard: "card numbers",
   address: "addresses",
-  name: "names",
 };
 
 /**

@@ -1,6 +1,7 @@
-import { createMappingFile } from "@/lib/mapping";
+import { cleanMappingEntries, createMappingFile } from "@/lib/mapping";
 import { detectAllMatches } from "./detectors";
 import { applyTaggedMasks, buildStats, resolveMatches } from "./masker";
+import { normalizeText } from "./normalize";
 import type { AnonymizeResult } from "./types";
 
 /**
@@ -8,17 +9,18 @@ import type { AnonymizeResult } from "./types";
  * Runs entirely in-memory with no external dependencies.
  */
 export function anonymizeText(text: string, sourceFile?: string): AnonymizeResult {
-  const allMatches = detectAllMatches(text);
+  const normalized = normalizeText(text);
+  const allMatches = detectAllMatches(normalized);
   const resolved = resolveMatches(allMatches);
-  const { anonymized, matches, mapping } = applyTaggedMasks(text, resolved);
+  const { anonymized, matches, mapping } = applyTaggedMasks(normalized, resolved);
   const stats = buildStats(matches);
 
   return {
-    original: text,
+    original: normalized,
     anonymized,
     matches,
     stats,
-    mapping: createMappingFile(mapping, sourceFile).entries,
+    mapping: cleanMappingEntries(createMappingFile(mapping, sourceFile).entries),
   };
 }
 
