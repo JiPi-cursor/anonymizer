@@ -6,6 +6,7 @@ import type { PatternDefinition, PiiType } from "./types";
 export const MASK_TOKENS: Record<PiiType, string> = {
   ssn: "[SSN_REDACTED]",
   iban: "[IBAN_REDACTED]",
+  creditCard: "[CARD_REDACTED]",
   email: "[EMAIL_REDACTED]",
   phone: "[PHONE_REDACTED]",
   dateOfBirth: "[DOB_REDACTED]",
@@ -17,6 +18,7 @@ export const MASK_TOKENS: Record<PiiType, string> = {
 export const PII_PRIORITY: Record<PiiType, number> = {
   ssn: 100,
   iban: 98,
+  creditCard: 96,
   email: 90,
   phone: 80,
   dateOfBirth: 70,

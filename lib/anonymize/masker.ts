@@ -55,6 +55,7 @@ export function buildStats(matches: PiiMatch[]): AnonymizeStats {
   const byType: AnonymizeStats["byType"] = {
     ssn: 0,
     iban: 0,
+    creditCard: 0,
     email: 0,
     phone: 0,
     dateOfBirth: 0,

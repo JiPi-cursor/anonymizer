@@ -7,6 +7,7 @@ interface StatsBarProps {
 const TYPE_LABELS: Record<PiiType, string> = {
   ssn: "SSNs",
   iban: "IBANs",
+  creditCard: "card numbers",
   email: "emails",
   phone: "phones",
   dateOfBirth: "dates of birth",

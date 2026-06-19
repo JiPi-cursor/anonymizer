@@ -1,0 +1,12 @@
+Nom : [NAME_REDACTED]
+Adresse : [ADDRESS_REDACTED]
+Email : [EMAIL_REDACTED]
+Téléphone : [PHONE_REDACTED]
+Numéro de sécurité sociale : [SSN_REDACTED]
+Date de naissance : [DOB_REDACTED]
+IBAN : [IBAN_REDACTED]
+Carte bancaire : [CARD_REDACTED]
+
+Ce matin, [NAME_REDACTED] a appelé son médecin au [PHONE_REDACTED] pour prendre rendez-vous. 
+Son adresse email professionnelle est [EMAIL_REDACTED].
+Il habite aussi parfois chez sa sœur [NAME_REDACTED] au [ADDRESS_REDACTED].

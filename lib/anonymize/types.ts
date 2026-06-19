@@ -2,6 +2,7 @@
 export type PiiType =
   | "ssn"
   | "iban"
+  | "creditCard"
   | "email"
   | "phone"
   | "dateOfBirth"
