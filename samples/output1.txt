@@ -1,12 +1,12 @@
-Nom : [NAME_REDACTED]
-Adresse : [ADDRESS_REDACTED]
-Email : [EMAIL_REDACTED]
-Téléphone : [PHONE_REDACTED]
-Numéro de sécurité sociale : [SSN_REDACTED]
-Date de naissance : [DOB_REDACTED]
-IBAN : [IBAN_REDACTED]
-Carte bancaire : [CARD_REDACTED]
+Nom : [PER_001]
+Adresse : [ADDR_001]
+Email : [EMAIL_001]
+Téléphone : [TEL_001]
+Numéro de sécurité sociale : [SSN_001]
+Date de naissance : [DOB_001]
+IBAN : [IBAN_001]
+Carte bancaire : [CARD_001]
 
-Ce matin, [NAME_REDACTED] a appelé son médecin au [PHONE_REDACTED] pour prendre rendez-vous. 
-Son adresse email professionnelle est [EMAIL_REDACTED].
-Il habite aussi parfois chez sa sœur [NAME_REDACTED] au [ADDRESS_REDACTED].
+Ce matin, [PER_001] a appelé son médecin au [TEL_002] pour prendre rendez-vous. 
+Son adresse email professionnelle est [EMAIL_002].
+Il habite aussi parfois chez sa sœur [PER_002] au [ADDR_002].

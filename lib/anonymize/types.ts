@@ -1,3 +1,5 @@
+import type { MappingEntry } from "@/lib/mapping";
+
 /** Supported categories of personally identifiable information. */
 export type PiiType =
   | "ssn"
@@ -15,6 +17,8 @@ export interface PiiMatch {
   start: number;
   end: number;
   text: string;
+  /** Assigned anonymization tag, e.g. [PER_001]. */
+  tag?: string;
 }
 
 /** Redaction counts grouped by PII type. */
@@ -29,6 +33,7 @@ export interface AnonymizeResult {
   anonymized: string;
   matches: PiiMatch[];
   stats: AnonymizeStats;
+  mapping: MappingEntry[];
 }
 
 /** Regex pattern with optional capture group for partial masking. */

@@ -2,18 +2,6 @@ import { NAME_TOKEN } from "./constants";
 import { FRENCH_PII_PATTERNS } from "./french-patterns";
 import type { PatternDefinition, PiiType } from "./types";
 
-/** Replacement tokens shown in the anonymized output. */
-export const MASK_TOKENS: Record<PiiType, string> = {
-  ssn: "[SSN_REDACTED]",
-  iban: "[IBAN_REDACTED]",
-  creditCard: "[CARD_REDACTED]",
-  email: "[EMAIL_REDACTED]",
-  phone: "[PHONE_REDACTED]",
-  dateOfBirth: "[DOB_REDACTED]",
-  address: "[ADDRESS_REDACTED]",
-  name: "[NAME_REDACTED]",
-};
-
 /** Higher priority wins when two detections overlap. */
 export const PII_PRIORITY: Record<PiiType, number> = {
   ssn: 100,

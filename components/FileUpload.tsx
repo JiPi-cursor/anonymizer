@@ -5,12 +5,23 @@ import { useCallback, useRef, useState } from "react";
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
   disabled?: boolean;
+  accept?: string;
+  label?: string;
+  hint?: string;
+  inputId?: string;
 }
 
 /**
- * Drag-and-drop zone and file picker for .txt uploads.
+ * Drag-and-drop zone and file picker.
  */
-export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) {
+export function FileUpload({
+  onFileSelect,
+  disabled = false,
+  accept = ".txt,text/plain",
+  label = "Drop a .txt file here or click to browse",
+  hint = "TXT files only",
+  inputId = "file-upload",
+}: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -63,7 +74,7 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
     <div
       role="button"
       tabIndex={0}
-      aria-label="Upload a text file"
+      aria-label={label}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -84,8 +95,9 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
     >
       <input
         ref={inputRef}
+        id={inputId}
         type="file"
-        accept=".txt,text/plain"
+        accept={accept}
         className="hidden"
         disabled={disabled}
         onChange={handleInputChange}
@@ -106,10 +118,8 @@ export function FileUpload({ onFileSelect, disabled = false }: FileUploadProps) 
         />
       </svg>
 
-      <p className="text-sm font-medium text-slate-700">
-        Drop a .txt file here or click to browse
-      </p>
-      <p className="mt-1 text-xs text-slate-500">TXT files only in v1</p>
+      <p className="text-sm font-medium text-slate-700">{label}</p>
+      <p className="mt-1 text-xs text-slate-500">{hint}</p>
     </div>
   );
 }

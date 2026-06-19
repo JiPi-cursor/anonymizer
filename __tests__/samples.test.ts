@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { anonymizeText } from "@/lib/anonymize";
+import { createMappingFile, deanonymizeText } from "@/lib/mapping";
 
 const SAMPLE_PATH = join(process.cwd(), "samples", "test1.txt");
 
@@ -24,24 +25,34 @@ const SAMPLE_PII_FRAGMENTS = [
 ];
 
 describe("samples/test1.txt", () => {
-  it("redacts all reference PII from the sample document", () => {
+  it("redacts all reference PII with typed tags", () => {
     const input = readFileSync(SAMPLE_PATH, "utf-8");
-    const result = anonymizeText(input);
+    const result = anonymizeText(input, "test1.txt");
 
     for (const fragment of SAMPLE_PII_FRAGMENTS) {
       expect(result.anonymized).not.toContain(fragment);
     }
 
-    expect(result.anonymized).toContain("Nom : [NAME_REDACTED]");
-    expect(result.anonymized).toContain("Adresse : [ADDRESS_REDACTED]");
-    expect(result.anonymized).toContain("Téléphone : [PHONE_REDACTED]");
-    expect(result.anonymized).toContain("Numéro de sécurité sociale : [SSN_REDACTED]");
-    expect(result.anonymized).toContain("Date de naissance : [DOB_REDACTED]");
-    expect(result.anonymized).toContain("IBAN : [IBAN_REDACTED]");
-    expect(result.anonymized).toContain("Carte bancaire : [CARD_REDACTED]");
-    expect(result.anonymized).toContain(
-      "chez sa sœur [NAME_REDACTED] au [ADDRESS_REDACTED]",
+    expect(result.anonymized).toMatch(/Nom : \[PER_001\]/);
+    expect(result.anonymized).toMatch(/Adresse : \[ADDR_001\]/);
+    expect(result.anonymized).toMatch(/Téléphone : \[TEL_001\]/);
+    expect(result.anonymized).toMatch(/Numéro de sécurité sociale : \[SSN_001\]/);
+    expect(result.anonymized).toMatch(/Date de naissance : \[DOB_001\]/);
+    expect(result.anonymized).toMatch(/IBAN : \[IBAN_001\]/);
+    expect(result.anonymized).toMatch(/Carte bancaire : \[CARD_001\]/);
+    expect(result.anonymized).toMatch(
+      /chez sa sœur \[PER_\d{3}\] au \[ADDR_\d{3}\]/,
     );
     expect(result.stats.total).toBeGreaterThanOrEqual(13);
+    expect(result.mapping.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it("restores the original sample via mapping round-trip", () => {
+    const input = readFileSync(SAMPLE_PATH, "utf-8");
+    const result = anonymizeText(input, "test1.txt");
+    const mapping = createMappingFile(result.mapping, "test1.txt");
+    const restored = deanonymizeText(result.anonymized, mapping);
+
+    expect(restored).toBe(input);
   });
 });

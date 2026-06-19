@@ -1,4 +1,6 @@
-import { MASK_TOKENS, PII_PRIORITY } from "./patterns";
+import type { MappingEntry } from "@/lib/mapping";
+import { PII_PRIORITY } from "./patterns";
+import { TagRegistry } from "./tags";
 import type { AnonymizeStats, PiiMatch } from "./types";
 
 /**
@@ -35,19 +37,48 @@ export function resolveMatches(matches: PiiMatch[]): PiiMatch[] {
 }
 
 /**
- * Replace detected spans with type-specific mask tokens.
+ * Assign sequential tags and replace detected spans in the source text.
  * Replacements run right-to-left so indices stay valid.
  */
-export function applyMasks(text: string, matches: PiiMatch[]): string {
-  const ordered = [...matches].sort((a, b) => b.start - a.start);
+export function applyTaggedMasks(
+  text: string,
+  matches: PiiMatch[],
+): { anonymized: string; matches: PiiMatch[]; mapping: MappingEntry[] } {
+  const registry = new TagRegistry();
+  const taggedMatches = matches.map((match) => ({
+    ...match,
+    tag: registry.getTag(match.type, match.text),
+  }));
+
+  const mappingByTag = new Map<string, MappingEntry>();
+
+  for (const match of taggedMatches) {
+    if (match.tag !== undefined && !mappingByTag.has(match.tag)) {
+      mappingByTag.set(match.tag, {
+        tag: match.tag,
+        type: match.type,
+        original: match.text,
+      });
+    }
+  }
+
+  const mapping = [...mappingByTag.values()].sort((a, b) =>
+    a.tag.localeCompare(b.tag),
+  );
+
+  const ordered = [...taggedMatches].sort((a, b) => b.start - a.start);
   let result = text;
 
   for (const match of ordered) {
-    const token = MASK_TOKENS[match.type];
+    const token = match.tag ?? "";
     result = result.slice(0, match.start) + token + result.slice(match.end);
   }
 
-  return result;
+  return {
+    anonymized: result,
+    matches: taggedMatches,
+    mapping,
+  };
 }
 
 /** Build redaction statistics from the final match list. */

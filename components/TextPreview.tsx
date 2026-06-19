@@ -1,16 +1,23 @@
 interface TextPreviewProps {
   original: string;
   anonymized: string;
+  originalTitle?: string;
+  anonymizedTitle?: string;
 }
 
 /**
  * Side-by-side panels showing original and anonymized document text.
  */
-export function TextPreview({ original, anonymized }: TextPreviewProps) {
+export function TextPreview({
+  original,
+  anonymized,
+  originalTitle = "Original",
+  anonymizedTitle = "Anonymized",
+}: TextPreviewProps) {
   return (
     <div className="grid min-h-[420px] grid-cols-1 gap-4 md:grid-cols-2">
-      <PreviewPanel title="Original" text={original} />
-      <PreviewPanel title="Anonymized" text={anonymized} accent />
+      <PreviewPanel title={originalTitle} text={original} />
+      <PreviewPanel title={anonymizedTitle} text={anonymized} accent />
     </div>
   );
 }
