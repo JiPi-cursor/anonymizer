@@ -14,11 +14,16 @@
 - Follow Conventional Commits
 
 ## Workflow Preferences
-- Always propose a detailed plan first
-- Show diffs before applying changes
-- Create a new branch for each feature
-- Keep code modular and testable
-- Prioritize performance and readability
+1. First, think through the problem. Read the codebase.
+2. Always propose a detailed plan first and write it in a todo.md.
+3. Check in with me before starting work - I'll verify the plan.
+4. Then, complete the todo one by one, marking them off as you go.
+5. At every step, give me a high-level explanation of what you changed.
+6. Keep every change simple and minimal. Avoid big rewrites. Show diffs before applying changes.
+7. Create a new branch for each feature
+8. Keep code modular and testable
+9. Prioritize performance and readability
+10. At the end, add a review section in todo.md summarizing the changes from the initial plan, if any.
 
 ## Project Context
 - This is usually a pricing / data tool
